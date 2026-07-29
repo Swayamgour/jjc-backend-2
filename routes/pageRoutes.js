@@ -43,6 +43,8 @@ router.get(
 
 
 
+
+
 router.get(
     "/:type",
     ctrl.getAllPages
