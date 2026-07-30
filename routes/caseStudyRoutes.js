@@ -1,27 +1,36 @@
 const express = require("express");
 const router = express.Router();
 
-const { protect, authorize } = require("../middleware/auth"); // adjust path to your actual auth middleware
+const {
+  createCaseStudy,
+  getCaseStudies,
+  getCaseStudyById,
+  getCaseStudyBySlug,
+  updateCaseStudy,
+  deleteCaseStudy,
+} = require("../controllers/caseStudyController");
+
+const { protect, authorize } = require("../middleware/auth");
+
 const { uploadImage } = require("../config/cloudinary");
 
-const ctrl = require("../controllers/caseStudyController");
-const categoryCtrl = require("../controllers/caseStudyCategoryController");
+/* ---------------------------- PUBLIC ---------------------------- */
 
-/* ------------------------- Case Studies ------------------------- */
+router.get("/", getCaseStudies);
 
-router.get("/", ctrl.getCaseStudies);
-router.get("/:slug", ctrl.getCaseStudyBySlug);
+router.get("/slug/:slug", getCaseStudyBySlug);
 
 router.post(
   "/",
   protect,
   authorize("admin", "editor"),
   uploadImage.fields([
-    { name: "heroImage", maxCount: 1 },
-    { name: "testimonialImage", maxCount: 1 },
-    { name: "galleryImages", maxCount: 10 },
+    {
+      name: "heroImage",
+      maxCount: 1,
+    },
   ]),
-  ctrl.createCaseStudy
+  createCaseStudy
 );
 
 router.put(
@@ -29,13 +38,19 @@ router.put(
   protect,
   authorize("admin", "editor"),
   uploadImage.fields([
-    { name: "heroImage", maxCount: 1 },
-    { name: "testimonialImage", maxCount: 1 },
-    { name: "galleryImages", maxCount: 10 },
+    {
+      name: "heroImage",
+      maxCount: 1,
+    },
   ]),
-  ctrl.updateCaseStudy
+  updateCaseStudy
 );
 
-router.delete("/:id", protect, authorize("admin", "editor"), ctrl.deleteCaseStudy);
+router.delete(
+  "/:id",
+  protect,
+  authorize("admin"),
+  deleteCaseStudy
+);
 
 module.exports = router;

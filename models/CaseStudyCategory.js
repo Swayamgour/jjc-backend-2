@@ -3,42 +3,74 @@ const mongoose = require("mongoose");
 /**
  * CaseStudyCategory
  * -----------------------------------------------------------------
- * Single model backing BOTH "Browse By Industry" and
- * "Browse By Capability" sections. The `type` field decides which
- * bucket it shows up in.
+ * Backs BOTH "Browse By Industry" (/success/industry-healthcare) and
+ * "Browse By Capability" (/success/capability-business-applications)
+ * listing pages. `type` decides which bucket it belongs to.
  *
- * This matches the `parent` object shape used in sampleCaseStudies.js:
- *   parent: { name, slug, theme: { accent, accentDark, accentLight, accentSoft, accentRgb } }
- *
- * If you already have separate Industry / Platform models (e.g. from
- * the navbar mega menu), swap this out and just reference those
- * ObjectIds from CaseStudy instead — the controller below isolates
- * that lookup into a single `resolveParentCategory()` helper so it's
- * a one-place change.
+ * This model also stores the page-level hero/glance content shown at
+ * the top of the industry/capability listing page (SuccessIndustryHealthcare.jsx),
+ * so the whole page — not just the case study cards — is CMS-driven.
  */
+
 const themeSchema = new mongoose.Schema(
   {
-    accent: { type: String, required: true },
-    accentDark: { type: String, required: true },
-    accentLight: { type: String, required: true },
-    accentSoft: { type: String, required: true },
-    accentRgb: { type: String, required: true },
+    accent: String,
+    accentDark: String,
+    accentLight: String,
+    accentSoft: String,
+    accentRgb: String,
+  },
+  { _id: false }
+);
+
+const glanceItemSchema = new mongoose.Schema(
+  {
+    icon: { type: String, default: "i-check" }, // svg sprite id, e.g. "i-check"
+    text: String,
   },
   { _id: false }
 );
 
 const caseStudyCategorySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, lowercase: true, trim: true },
+    name: { type: String, required: true, trim: true }, // "Healthcare"
+    slug: { type: String, required: true, lowercase: true, trim: true }, // "healthcare"
     type: {
       type: String,
       enum: ["industry", "capability"],
       required: true,
     },
-    icon: { type: String }, // e.g. lucide icon name, matches navbar icons
-    theme: { type: themeSchema, required: true },
-    order: { type: Number, default: 0 }, // for controlling display order in "Browse By ..." lists
+    icon: { type: String }, // lucide icon name, matches navbar icons
+    theme: { type: themeSchema },
+    order: { type: Number, default: 0 }, // display order in "Browse By ..." lists
+
+    // ---- Listing page hero (top of SuccessIndustryHealthcare-style page) ----
+    heroEyebrow: { type: String, default: "Client Success · Industry" },
+    heroHeading: String, // "What good looks like in Healthcare"
+    heroLede: String,
+
+    // ---- "Where these come from" aside box ----
+    glanceHeading: { type: String, default: "Where these come from" },
+    glanceItems: [glanceItemSchema],
+
+    // ---- svc-stats strip under the hero (extra stats beyond the auto-computed count) ----
+    extraStats: [
+      {
+        value: String,
+        label: String,
+        _id: false,
+      },
+    ],
+
+    // ---- "Success stories" section head ----
+    listHeading: String, // "Four outcomes in Healthcare"
+    listLede: String,
+
+    status: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "published",
+    },
   },
   { timestamps: true }
 );
