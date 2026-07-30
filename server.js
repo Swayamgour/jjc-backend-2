@@ -29,6 +29,10 @@ const blogRoutes = require("./routes/blogRoutes");
 const caseStudyCategory = require("./routes/caseStudyCategoryRoutes");
 const caseStudy = require("./routes/caseStudyRoutes");
 const pages = require("./routes/pageRoutes");
+const caseStudyStoryRoutes = require(
+  "./routes/caseStudyStoryRoutes"
+);
+
 
 
 // Connect to DB
@@ -91,6 +95,9 @@ app.use("/api/blog", blogRoutes);
 app.use("/api/case-study-categories", caseStudyCategory);
 app.use("/api/case-studies", caseStudy);
 app.use("/api/pages", pages);
+app.use("/api/case-study-stories", caseStudyStoryRoutes);
+
+
 
 
 // Health check
