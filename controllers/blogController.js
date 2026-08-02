@@ -34,7 +34,7 @@ const shapePost = (postDoc) => {
 // @desc  List posts with filters, search, pagination (public: published only)
 // @route GET /api/blog
 const getPosts = asyncHandler(async (req, res) => {
-	const { platform, service, industry, type, search, page = 1, limit = 10, all } = req.query;
+	const { platform, service, industry, type, search, page = 1, limit = 20, all } = req.query;
 
 	const query = {};
 	if (!all) query.isPublished = true; // admin panel passes ?all=true to see drafts too

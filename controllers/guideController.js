@@ -33,7 +33,7 @@ const shapeGuide = (guideDoc) => {
 
 // @route GET /api/guides
 const getGuides = asyncHandler(async (req, res) => {
-  const { platform, service, industry, level, search, page = 1, limit = 10, all } = req.query;
+  const { platform, service, industry, level, search, page = 1, limit = 20, all } = req.query;
 
   const query = {};
   if (!all) query.isPublished = true;
