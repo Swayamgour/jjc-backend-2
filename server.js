@@ -29,9 +29,12 @@ const blogRoutes = require("./routes/blogRoutes");
 const caseStudyCategory = require("./routes/caseStudyCategoryRoutes");
 const caseStudy = require("./routes/caseStudyRoutes");
 const pages = require("./routes/pageRoutes");
-const caseStudyStoryRoutes = require(
-  "./routes/caseStudyStoryRoutes"
-);
+const homePageRoutes = require("./routes/homePageRoutes");
+const caseStudyStoryRoutes = require("./routes/caseStudyStoryRoutes");
+const checklistRoutes = require("./routes/checklistRoutes");
+const guideRoutes = require("./routes/guideRoutes");
+const whitepaperRoutes = require("./routes/whitepaperRoutes");
+
 
 
 
@@ -96,6 +99,11 @@ app.use("/api/case-study-categories", caseStudyCategory);
 app.use("/api/case-studies", caseStudy);
 app.use("/api/pages", pages);
 app.use("/api/case-study-stories", caseStudyStoryRoutes);
+app.use("/api/home-page", homePageRoutes);
+app.use("/api/checklists", checklistRoutes);
+app.use("/api/guides", guideRoutes);
+app.use("/api/whitepapers", whitepaperRoutes);
+
 
 
 

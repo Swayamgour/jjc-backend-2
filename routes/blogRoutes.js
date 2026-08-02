@@ -1,41 +1,28 @@
 const express = require("express");
-const router = express.Router();
-
-const { uploadImage } = require("../config/cloudinary");
 
 const {
-	createBlog,
-	getAllBlogs,
-	getPublishedBlogs,
-	getBlogById,
-	getBlogBySlug,
-	updateBlog,
-	toggleBlogStatus,
-	deleteBlog,
+	getPosts,
+	getFilterOptions,
+	getPostBySlug,
+	getPostById,
+	createPost,
+	updatePost,
+	deletePost,
 } = require("../controllers/blogController");
 
-// Create Blog
-router.post("/",  uploadImage.single("image"), createBlog);
+const { protect } = require("../middleware/auth");
 
-// Admin - All Blogs
-router.get("/", getAllBlogs);
+const router = express.Router();
 
-// Public - Published Blogs
-router.get("/published", getPublishedBlogs);
+// Public routes
+router.get("/", getPosts);
+router.get("/filters", getFilterOptions);
+router.get("/:slug", getPostBySlug);
 
-// Get Blog by ID
-router.get("/id/:id", getBlogById);
-
-// Get Blog by Slug
-router.get("/:slug", getBlogBySlug);
-
-// Toggle Publish Status
-router.patch("/:id/status",  toggleBlogStatus);
-
-// Update Blog
-router.put("/:id",  uploadImage.single("image"), updateBlog);
-
-// Delete Blog
-router.delete("/:id",  deleteBlog);
+// Admin routes
+router.get("/id/:id", protect, getPostById);
+router.post("/", protect, createPost);
+router.put("/:id", protect, updatePost);
+router.delete("/:id", protect, deletePost);
 
 module.exports = router;
