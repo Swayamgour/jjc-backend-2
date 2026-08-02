@@ -84,7 +84,7 @@ app.use("/api/platforms", platformRoutes);
 app.use("/api/solutions", solutionRoutes);
 app.use("/api/industries", industryRoutes);
 app.use("/api/resources", resourceRoutes);
-app.use("/api/case-studies", caseStudyRoutes);
+
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/faqs", faqRoutes);
 app.use("/api/contact", contactLimiter, contactRoutes);
@@ -95,6 +95,7 @@ app.use("/api/home", homeRoutes);
 app.use("/api/home-content", homeContentRoutes);
 app.use("/api/blog-categories", blogCategoryRoutes);
 app.use("/api/blog", blogRoutes);
+app.use("/api/case-studies", caseStudyRoutes);
 app.use("/api/case-study-categories", caseStudyCategory);
 app.use("/api/case-studies", caseStudy);
 app.use("/api/pages", pages);

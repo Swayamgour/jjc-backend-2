@@ -1,5 +1,7 @@
 const slugify = require("slugify");
 const CaseStudy = require("../models/CaseStudy");
+const CaseStudyCategory = require("../models/CaseStudyCategory");
+
 const {
   parseJsonFields,
   resolveParentCategory,
@@ -156,10 +158,23 @@ exports.getCaseStudyById = async (req, res) => {
 /* GET BY SLUG */
 /* -------------------------------------------------------------------------- */
 
+
+
 exports.getCaseStudyBySlug = async (req, res) => {
   try {
-    const page = await CaseStudy.findOne({
+    const category = await CaseStudyCategory.findOne({
       slug: req.params.slug,
+    });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
+
+    const page = await CaseStudy.findOne({
+      parent: category._id,
       status: "published",
     }).populate("parent");
 
@@ -170,18 +185,17 @@ exports.getCaseStudyBySlug = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       data: page,
     });
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 /* -------------------------------------------------------------------------- */
 /* UPDATE */
 /* -------------------------------------------------------------------------- */
