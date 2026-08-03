@@ -1,53 +1,67 @@
 const mongoose = require("mongoose");
 
-// Blueprint has 3 CTAs: Schedule Consultation, Request Assessment, Talk to Expert
-// All funnel into ContactLead with different types
-
 const contactLeadSchema = new mongoose.Schema(
   {
-    // Lead info
-    firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
+    // Lead info - matches frontend field names
+    firstName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true
+    },
     email: {
       type: String,
       required: true,
       lowercase: true,
       match: [/\S+@\S+\.\S+/, "Invalid email"],
     },
-    phone: String,
-    company: String,
-    jobTitle: String,
+    phone: {
+      type: String,
+      required: false,
+    },
+    company: {
+      type: String,
+      required: true,
+    },
+    jobTitle: {
+      type: String,
+      required: false,
+    },
 
-    // Which CTA triggered this lead
+    // Form selection fields
     leadType: {
       type: String,
-      enum: ["consultation", "assessment", "expert", "general", "contact"],
+      enum: ["consultation", "assessment", "expert", "general"],
       default: "general",
     },
+    interestedIn: {
+      type: String, // Single string from frontend dropdown
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+    },
 
-    // Which page/service they came from
-    sourcePageType: {
+    // Company size - must match the exact `value` attributes sent by the frontend <select>
+    companySize: {
       type: String,
       enum: [
-        "homepage",
-        "service",
-        "platform",
-        "solution",
-        "industry",
-        "resource",
-        "case-study",
-        "contact",
-        "other",
+        "1-10",
+        "11-50",
+        "51-200",
+        "201-500",
+        "501-1000",
+        "1000+",
       ],
+      required: false,
     },
-    sourcePageId: String,
-    sourcePageTitle: String,
 
-    // What they're interested in
-    interestedIn: [String],
-    message: String,
-
-    // Which Microsoft service area
+    // Microsoft service area
     serviceArea: {
       type: String,
       enum: [
@@ -62,11 +76,29 @@ const contactLeadSchema = new mongoose.Schema(
         "Not Sure",
         "Other",
       ],
+      required: false,
     },
 
-    companySize: {
+    // Page tracking
+    sourcePageType: {
       type: String,
-      enum: ["1-10", "11-50", "51-200", "201-500", "500+"],
+      enum: [
+        "homepage",
+        "service",
+        "platform",
+        "solution",
+        "industry",
+        "resource",
+        "case-study",
+        "contact",
+        "other",
+      ],
+      default: "contact",
+    },
+    sourcePageId: String,
+    sourcePageTitle: {
+      type: String,
+      default: "Contact Us",
     },
 
     // CRM pipeline status
@@ -75,7 +107,6 @@ const contactLeadSchema = new mongoose.Schema(
       enum: ["new", "contacted", "qualified", "proposal", "closed", "lost"],
       default: "new",
     },
-
     adminNotes: String,
     assignedTo: String,
 
@@ -84,13 +115,21 @@ const contactLeadSchema = new mongoose.Schema(
     utmMedium: String,
     utmCampaign: String,
 
+    // Spam protection
     ipAddress: String,
+
+    // Consent
+    consent: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-// Index for dashboard queries
+// Indexes for performance
 contactLeadSchema.index({ status: 1, createdAt: -1 });
 contactLeadSchema.index({ email: 1 });
+contactLeadSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("ContactLead", contactLeadSchema);

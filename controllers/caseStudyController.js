@@ -162,21 +162,23 @@ exports.getCaseStudyById = async (req, res) => {
 
 exports.getCaseStudyBySlug = async (req, res) => {
   try {
-    const category = await CaseStudyCategory.findOne({
+    let page = await CaseStudy.findOne({
       slug: req.params.slug,
-    });
-
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
-    }
-
-    const page = await CaseStudy.findOne({
-      parent: category._id,
       status: "published",
     }).populate("parent");
+
+    if (!page) {
+      const category = await CaseStudyCategory.findOne({
+        slug: req.params.slug,
+      });
+
+      if (category) {
+        page = await CaseStudy.findOne({
+          parent: category._id,
+          status: "published",
+        }).populate("parent");
+      }
+    }
 
     if (!page) {
       return res.status(404).json({
