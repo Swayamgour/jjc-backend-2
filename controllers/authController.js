@@ -69,16 +69,53 @@ exports.getMe = async (req, res) => {
 };
 
 // PUT /api/auth/me
+
 exports.updateMe = async (req, res) => {
   try {
-    const { name, avatar } = req.body;
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { name, avatar },
-      { new: true, runValidators: true }
-    );
-    res.json({ success: true, user });
+    const { email, oldPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id).select("+password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Email update
+    if (email) {
+      user.email = email;
+    }
+
+    // Password update
+    if (oldPassword && newPassword) {
+      const isMatch = await user.matchPassword(oldPassword);
+
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: "Old password is incorrect",
+        });
+      }
+
+      user.password = newPassword;
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        email: user.email,
+      },
+    });
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };

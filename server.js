@@ -111,7 +111,7 @@ app.use("/api/whitepapers", whitepaperRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "21/07/2026 update", env: process.env.NODE_ENV });
+  res.json({ status: "05/08/2026 update", env: process.env.NODE_ENV });
 });
 
 // 404 handler
