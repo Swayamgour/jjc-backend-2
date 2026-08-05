@@ -87,7 +87,7 @@ app.use("/api/resources", resourceRoutes);
 
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/faqs", faqRoutes);
-app.use("/api/contact", contactLimiter, contactRoutes);
+app.use("/api/contact",  contactRoutes);
 app.use("/api/seo", seoRoutes);
 app.use("/api/nav", navRoutes);
 app.use("/api/dashboard", dashboardRoutes);
