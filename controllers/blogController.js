@@ -127,23 +127,101 @@ const getPostById = asyncHandler(async (req, res) => {
 
 // @desc  Create post (admin)
 // @route POST /api/blog
+// @route POST /api/blog
 const createPost = asyncHandler(async (req, res) => {
-	const post = await BlogPost.create(req.body);
-	res.status(201).json({ success: true, data: post });
-});
+	const data = {
+		...req.body,
+	};
 
+	// Parse JSON fields coming from FormData
+	if (req.body.ctaPrimary) {
+		data.ctaPrimary = JSON.parse(req.body.ctaPrimary);
+	}
+
+	if (req.body.ctaSecondary) {
+		data.ctaSecondary = JSON.parse(req.body.ctaSecondary);
+	}
+
+	if (req.body.breadcrumb) {
+		data.breadcrumb = JSON.parse(req.body.breadcrumb);
+	}
+
+	if (req.body.takeaways) {
+		data.takeaways = JSON.parse(req.body.takeaways);
+	}
+
+	// Convert boolean
+	if (req.body.isPublished !== undefined) {
+		data.isPublished = req.body.isPublished === "true";
+	}
+
+	// Feature image
+	if (req.files?.featureImage?.[0]) {
+		data.featureImage = req.files.featureImage[0].path;
+	}
+
+	const post = await BlogPost.create(data);
+
+	res.status(201).json({
+		success: true,
+		data: post,
+	});
+});
 // @desc  Update post (admin)
 // @route PUT /api/blog/:id
+// @route PUT /api/blog/:id
 const updatePost = asyncHandler(async (req, res) => {
-	const post = await BlogPost.findByIdAndUpdate(req.params.id, req.body, {
-		new: true,
-		runValidators: true,
-	});
-	if (!post) {
-		res.status(404);
-		throw new Error("Post not found");
+	const data = {
+		...req.body,
+	};
+
+	// Parse JSON fields coming from FormData
+	if (req.body.ctaPrimary) {
+		data.ctaPrimary = JSON.parse(req.body.ctaPrimary);
 	}
-	res.status(200).json({ success: true, data: post });
+
+	if (req.body.ctaSecondary) {
+		data.ctaSecondary = JSON.parse(req.body.ctaSecondary);
+	}
+
+	if (req.body.breadcrumb) {
+		data.breadcrumb = JSON.parse(req.body.breadcrumb);
+	}
+
+	if (req.body.takeaways) {
+		data.takeaways = JSON.parse(req.body.takeaways);
+	}
+
+	// Convert boolean
+	if (req.body.isPublished !== undefined) {
+		data.isPublished = req.body.isPublished === "true";
+	}
+
+	// New feature image
+	if (req.files?.featureImage?.[0]) {
+		data.featureImage = req.files.featureImage[0].path;
+	}
+
+	const post = await BlogPost.findByIdAndUpdate(
+		req.params.id,
+		data,
+		{
+			new: true,
+			runValidators: true,
+		}
+	);
+
+	if (!post) {
+		return res.status(404).json({
+			success: false,
+			message: "Blog post not found",
+		});
+	}
+
+	res.status(200).json({
+		success: true,
+		data: post,
+	});
 });
 
 // @desc  Delete post (admin)

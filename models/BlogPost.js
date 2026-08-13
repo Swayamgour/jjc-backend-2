@@ -46,6 +46,11 @@ const BlogPostSchema = new Schema(
         },
         icon: { type: String, default: "chart" }, // erp | docs | chart | grid | device | shield | cloud | sales
 
+        featureImage: {
+            type: String,
+            default: "",
+        },
+
         /* ---- Meta / display ---- */
         readTime: { type: String, default: "" }, // "8 min read" — auto-computed if blank
         publishedAt: { type: Date, default: Date.now },
