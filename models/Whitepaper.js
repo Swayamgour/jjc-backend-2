@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const seoSchema = require("../utils/seoSchema");
 const { Schema } = mongoose;
 
 const CtaSchema = new Schema({ text: String, link: String }, { _id: false });
@@ -118,8 +119,7 @@ const WhitepaperSchema = new Schema(
     /* Publishing / SEO */
     isPublished: { type: Boolean, default: true },
     author: { type: String, default: "JJC Systems" },
-    seoTitle: { type: String, default: "" },
-    seoDescription: { type: String, default: "" },
+    seo: { type: seoSchema, default: () => ({}) },
   },
   { timestamps: true }
 );

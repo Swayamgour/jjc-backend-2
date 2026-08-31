@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
+const seoSchema = require("../utils/seoSchema");
 
 const { Schema } = mongoose;
 
@@ -240,12 +241,9 @@ const HomePageSchema = new Schema(
     },
     contactInfo: ContactInfoSchema,
 
-    seo: {
-      title: String,
-      description: String,
-    },
+    seo: { type: seoSchema, default: () => ({}) },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("HomePage", HomePageSchema);
+module.exports = mongoose.model("HomePage", HomePageSchema);

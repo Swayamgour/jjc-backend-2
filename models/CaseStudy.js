@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const seoSchema = require("../utils/seoSchema");
 
 const buttonSchema = new mongoose.Schema(
   {
@@ -131,16 +132,6 @@ const ctaSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const seoSchema = new mongoose.Schema(
-  {
-    metaTitle: String,
-    metaDescription: String,
-    keywords: [String],
-    canonicalUrl: String,
-  },
-  { _id: false }
-);
-
 const caseStudyPageSchema = new mongoose.Schema(
   {
     name: {
@@ -176,7 +167,7 @@ const caseStudyPageSchema = new mongoose.Schema(
 
     ctaSection: ctaSchema,
 
-    seo: seoSchema,
+    seo: { type: seoSchema, default: () => ({}) },
 
     heroImage: {
       url: String,

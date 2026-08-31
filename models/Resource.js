@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const seoSchema = require("../utils/seoSchema");
 
 // PDF blueprint: /insights/ section
 // Blog, Guides, Resources, Checklists, FAQs
@@ -95,13 +96,7 @@ const resourceSchema = new mongoose.Schema(
     isPublished: { type: Boolean, default: false },
     publishedAt: Date,
 
-    seo: {
-      metaTitle: String,
-      metaDescription: { type: String, maxlength: 160 },
-      keywords: [String],
-      ogImage: String,
-      canonicalUrl: String,
-    },
+    seo: { type: seoSchema, default: () => ({}) },
   },
   { timestamps: true }
 );

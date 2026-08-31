@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const seoSchema = require("../utils/seoSchema");
 
 
 /* ==============================================================
@@ -426,13 +427,7 @@ const pageSchema = new mongoose.Schema(
     },
 
 
-    seo: {
-      metaTitle: String,
-      metaDescription: { type: String, maxlength: 160 },
-      keywords: [String],
-      ogImage: String,
-      canonicalUrl: String,
-    },
+    seo: { type: seoSchema, default: () => ({}) },
 
     isPublished: { type: Boolean, default: true },
     order: { type: Number, default: 0 },

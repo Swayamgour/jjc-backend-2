@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const seoSchema = require("../utils/seoSchema");
 
 // PDF blueprint: Solution pages are OUTCOME-based, not product-based
 // Modern Work, Security, Infrastructure, Data & AI, Business Applications,
@@ -84,13 +85,7 @@ const solutionSchema = new mongoose.Schema(
       },
     ],
 
-    seo: {
-      metaTitle: String,
-      metaDescription: { type: String, maxlength: 160 },
-      keywords: [String],
-      ogImage: String,
-      canonicalUrl: String,
-    },
+    seo: { type: seoSchema, default: () => ({}) },
 
     isPublished: { type: Boolean, default: false },
     order: { type: Number, default: 0 },

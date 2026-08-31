@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const seoSchema = require("../utils/seoSchema");
 
 
 /* ---------------- Common Sub-Schemas ---------------- */
@@ -432,22 +433,7 @@ const serviceSchema = new mongoose.Schema(
 
 
 
-    seo: {
-
-      metaTitle: String,
-
-      metaDescription: {
-        type: String,
-        maxlength: 160,
-      },
-
-      keywords: [String],
-
-      ogImage: String,
-
-      canonicalUrl: String,
-
-    },
+    seo: { type: seoSchema, default: () => ({}) },
 
 
 

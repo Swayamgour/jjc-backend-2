@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const seoSchema = require("../utils/seoSchema");
 
 const { Schema } = mongoose;
 
@@ -66,9 +67,8 @@ const BlogPostSchema = new Schema(
         isPublished: { type: Boolean, default: true },
         author: { type: String, default: "JJC Systems" },
 
-        /* ---- SEO ---- */
-        seoTitle: { type: String, default: "" },
-        seoDescription: { type: String, default: "" },
+        /* ---- SEO (standardized across all page types) ---- */
+        seo: { type: seoSchema, default: () => ({}) },
     },
     { timestamps: true }
 );

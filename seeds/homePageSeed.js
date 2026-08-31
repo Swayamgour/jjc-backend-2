@@ -10,9 +10,10 @@ const homePageData = {
   singletonKey: "home",
 
   seo: {
-    title: "JJC Systems — Microsoft Consulting, Managed IT & Business Applications",
-    description:
+    metaTitle: "JJC Systems — Microsoft Consulting, Managed IT & Business Applications",
+    metaDescription:
       "JJC Systems is a one-stop technology partner for Microsoft consulting and adoption — Dynamics 365, Azure and Microsoft 365 — plus managed IT, security and custom business solutions built on the tools your teams already use.",
+    keywords: ["Microsoft Consulting", "Managed IT", "Dynamics 365", "Microsoft 365", "Azure"],
   },
 
   /* ---------------- Hero ---------------- */

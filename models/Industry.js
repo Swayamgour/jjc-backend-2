@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const seoSchema = require("../utils/seoSchema");
 
 /* -------------------------------- */
 /* Common Schemas */
@@ -296,6 +297,11 @@ const industrySchema = new mongoose.Schema(
 			secondaryLabel: String,
 
 		},
+
+
+		/* SEO (standardized across all page types) */
+
+		seo: { type: seoSchema, default: () => ({}) },
 
 	},
 	{

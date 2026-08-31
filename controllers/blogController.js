@@ -150,6 +150,10 @@ const createPost = asyncHandler(async (req, res) => {
 		data.takeaways = JSON.parse(req.body.takeaways);
 	}
 
+	if (req.body.seo) {
+		data.seo = JSON.parse(req.body.seo);
+	}
+
 	// Convert boolean
 	if (req.body.isPublished !== undefined) {
 		data.isPublished = req.body.isPublished === "true";
@@ -190,6 +194,10 @@ const updatePost = asyncHandler(async (req, res) => {
 
 	if (req.body.takeaways) {
 		data.takeaways = JSON.parse(req.body.takeaways);
+	}
+
+	if (req.body.seo) {
+		data.seo = JSON.parse(req.body.seo);
 	}
 
 	// Convert boolean

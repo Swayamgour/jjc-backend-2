@@ -187,6 +187,7 @@ exports.createIndustry = async (req, res) => {
       "caseStudies",
       "faqs",
       "cta",
+      "seo",
     ];
 
     parseJsonFields(body, jsonFields);
@@ -253,6 +254,7 @@ exports.updateIndustry = async (req, res) => {
       "caseStudies",
       "faqs",
       "cta",
+      "seo",
     ];
 
     parseJsonFields(body, jsonFields);
@@ -342,6 +344,11 @@ exports.updateIndustry = async (req, res) => {
     body.cta = {
       ...(existingIndustry.cta?.toObject?.() || {}),
       ...(body.cta || {}),
+    };
+
+    body.seo = {
+      ...(existingIndustry.seo?.toObject?.() || {}),
+      ...(body.seo || {}),
     };
 
     // Fix "" -> Boolean cast errors (e.g. solutions.alignLeft)

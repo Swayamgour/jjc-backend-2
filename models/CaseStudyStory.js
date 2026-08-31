@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const seoSchema = require("../utils/seoSchema");
 
 // ======================================================
 // SHARED SUB-SCHEMAS
@@ -157,15 +158,6 @@ const relatedStorySchema = new mongoose.Schema({
     category: String,
 });
 
-const seoSchema = new mongoose.Schema(
-    {
-        title: String,
-        description: String,
-        keywords: [String],
-    },
-    { _id: false }
-);
-
 // ======================================================
 // MAIN SCHEMA
 // ======================================================
@@ -216,7 +208,7 @@ const caseStudyStorySchema = new mongoose.Schema(
         relatedStoriesTitle: String,
         relatedStories: [relatedStorySchema],
 
-        seo: seoSchema,
+        seo: { type: seoSchema, default: () => ({}) },
 
         status: {
             type: String,
