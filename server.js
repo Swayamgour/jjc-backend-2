@@ -95,6 +95,7 @@ app.use("/api/home", homeRoutes);
 app.use("/api/home-content", homeContentRoutes);
 app.use("/api/blog-categories", blogCategoryRoutes);
 app.use("/api/blog", blogRoutes);
+
 app.use("/api/case-studies", caseStudyRoutes);
 app.use("/api/case-study-categories", caseStudyCategory);
 app.use("/api/case-studies", caseStudy);
