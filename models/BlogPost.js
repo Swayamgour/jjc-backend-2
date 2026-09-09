@@ -35,15 +35,15 @@ const BlogPostSchema = new Schema(
         type: {
             type: String,
             // required: true,
-            enum: [
-                "Challenges",
-                "Solutions",
-                "How-to guide",
-                "Best practices",
-                "Market trends",
-                "Features",
-                "Future readiness",
-            ],
+            // enum: [
+            //     "Challenges",
+            //     "Solutions",
+            //     "How-to guide",
+            //     "Best practices",
+            //     "Market trends",
+            //     "Features",
+            //     "Future readiness",
+            // ],
         },
         icon: { type: String, default: "chart" }, // erp | docs | chart | grid | device | shield | cloud | sales
 
