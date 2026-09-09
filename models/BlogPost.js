@@ -29,12 +29,12 @@ const BlogPostSchema = new Schema(
         content: { type: String, default: "" }, // full HTML body
 
         /* ---- Taxonomy (matches your existing Platform/Industry slugs) ---- */
-        platform: { type: String, required: true }, // e.g. "business-central"
-        service: { type: String, required: true }, // e.g. "business-applications"
-        industry: { type: String, required: true }, // e.g. "legal"
+        platform: { type: String }, // e.g. "business-central"
+        service: { type: String }, // e.g. "business-applications"
+        industry: { type: String }, // e.g. "legal"
         type: {
             type: String,
-            required: true,
+            // required: true,
             enum: [
                 "Challenges",
                 "Solutions",
