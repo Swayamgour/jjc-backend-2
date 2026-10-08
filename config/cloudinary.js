@@ -1,5 +1,5 @@
 const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary-v2");
 const multer = require("multer");
 
 cloudinary.config({
@@ -8,13 +8,18 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Storage for general images (hero banners, thumbnails)
+// Storage for general images
 const imageStorage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: "jjc-systems",
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ quality: "auto", fetch_format: "auto" }],
+    transformation: [
+      {
+        quality: "auto",
+        fetch_format: "auto",
+      },
+    ],
   },
 });
 
@@ -29,12 +34,20 @@ const caseStudyStorage = new CloudinaryStorage({
 
 const uploadImage = multer({
   storage: imageStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
 });
 
 const uploadCaseStudyImage = multer({
   storage: caseStudyStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
 });
 
-module.exports = { cloudinary, uploadImage, uploadCaseStudyImage };
+module.exports = {
+  cloudinary,
+  uploadImage,
+  uploadCaseStudyImage,
+};

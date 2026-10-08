@@ -13,8 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "changes": "^1.1.1",
-    "cloudinary": "^1.41.3",
+    "changes": "^0.0.0",
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -26,8 +26,8 @@
     "mongoose": "^8.24.1",
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
-    "multer-storage-cloudinary": "^4.0.0",
-    "nodemon": "^3.1.14",
+    "multer-storage-cloudinary-v2": "^1.0.3",
+    "nodemon": "^1.14.10",
     "slugify": "^1.6.9"
   }
 }

@@ -7,25 +7,24 @@ const slugify = require("slugify");
 
 /* ==============================
  VALID TYPES
- Single source of truth for the three content types this
- controller serves. `req.params.type` is validated against
- this list on every route.
 ================================ */
 
 const VALID_TYPES = ["service", "industry", "platform"];
 
 const validateType = (type) => VALID_TYPES.includes(type);
 
+const URL_SEGMENT = {
+  service: "services",
+  industry: "industries",
+  platform: "platforms",
+};
+
 
 /* ==============================
  JSON PARSER
- Every nested section (hero, challenges, sectorOverview,
- applicationLayer, capabilities, industryUseCases, outcomes,
- pillars, taskBoard, consultingServices, appGrid, approach,
- whyUs, successStories, insights, cta, relatedItems, seo) is
- sent as a JSON string from multipart/form-data (because
- heroImage travels alongside it as a file), so we parse each
- one back into an object/array.
+ Every nested section is sent as a JSON string from
+ multipart/form-data (heroImage travels alongside as a file),
+ so each one is parsed back into an object/array here.
 ================================ */
 
 const parseJsonFields = (body, fields) => {
@@ -42,6 +41,7 @@ const parseJsonFields = (body, fields) => {
 
 const PAGE_JSON_FIELDS = [
   "hero",
+  "definition",          // NEW — The basics + layers + paragraphs
   "challenges",
   "sectorOverview",
   "applicationLayer",
@@ -53,27 +53,20 @@ const PAGE_JSON_FIELDS = [
   "consultingServices",
   "appGrid",
   "approach",
+  "whoFor",              // NEW — Who it's for
+  "microsoftPlatforms",  // NEW — Microsoft platforms grid
   "whyUs",
   "successStories",
   "insights",
   "cta",
   "relatedItems",
+  "faqs",                // NEW — FAQs
   "seo",
 ];
 
 
 /* ==============================
  RESOLVE PARENT CATEGORY FROM SUBCATEGORY (ITEM)
- The admin dropdown sends the 3rd-level ITEM _id (from
- Category.subcategories[].items[]) as `subCategory` — NOT the
- 2nd-level subcategory _id. So we must search inside the nested
- `items` array, not just `subcategories._id`.
-
- NOTE: this is type-agnostic on purpose. Your Category
- collection is expected to have one top-level doc per area
- (e.g. a "Services" doc, an "Industries" doc, a "Platforms"
- doc), each with its own subcategories/items, so the same
- lookup logic works for all three page types.
 ================================ */
 
 const resolveCategoryFromSubCategory = async (subCategoryId) => {
@@ -90,9 +83,6 @@ const resolveCategoryFromSubCategory = async (subCategoryId) => {
 
 /* ==============================
  FIND THE ITEM (for subCategoryName in responses)
- `items` is nested two levels deep inside a Category
- (Category -> subcategories[] -> items[]), so Mongoose's `.id()`
- helper (one level deep only) can't reach it. Walk manually.
 ================================ */
 
 const findItemById = (category, itemId) => {
@@ -108,12 +98,24 @@ const findItemById = (category, itemId) => {
   return null;
 };
 
+/* find the SUBCATEGORY (2nd level) that contains an item —
+   handy for breadcrumbs ("Strategy & Transformation") */
+const findSubcategoryOfItem = (category, itemId) => {
+  if (!category || !itemId) return null;
+
+  for (const sub of category.subcategories || []) {
+    const hit = (sub.items || []).some(
+      (it) => String(it._id) === String(itemId)
+    );
+    if (hit) return sub;
+  }
+
+  return null;
+};
+
 
 /* ==============================
  POPULATE RELATED-ITEMS OVERRIDES
- relatedItems.items reference other Page docs but allow
- title/description/link overrides. Fill in whatever wasn't
- overridden using the referenced page.
 ================================ */
 
 const hydrateRelatedItems = async (obj) => {
@@ -203,8 +205,10 @@ exports.getAllPages = async (req, res) => {
 /* ==============================
  GET SINGLE PAGE
  GET /api/pages/:type/:slug
- Also returns breadcrumb pieces (category/subCategory names)
- and hydrated related items, since the detail page needs both.
+ Returns breadcrumb pieces too:
+   categoryName / categorySlug   (top level, e.g. "Services")
+   groupName / groupSlug         (2nd level, e.g. "Strategy & Transformation")
+   subCategoryName               (3rd level item)
 ================================ */
 
 exports.getPage = async (req, res) => {
@@ -235,11 +239,14 @@ exports.getPage = async (req, res) => {
     ).lean();
 
     const item = findItemById(category, page.subCategory);
+    const group = findSubcategoryOfItem(category, page.subCategory);
 
     obj.subCategory = page.subCategory;
     obj.subCategoryName = item?.name || "";
     obj.categoryName = category?.name || "";
     obj.categorySlug = category?.slug || "";
+    obj.groupName = group?.name || "";
+    obj.groupSlug = group?.slug || "";
 
     obj = await hydrateRelatedItems(obj);
 
@@ -276,7 +283,6 @@ exports.createPage = async (req, res) => {
 
     parseJsonFields(body, PAGE_JSON_FIELDS);
 
-    // default nested objects so we can safely set .hero.image etc.
     body.hero = body.hero || {};
 
     const heroFile = req.files?.heroImage?.[0];
@@ -288,7 +294,6 @@ exports.createPage = async (req, res) => {
       };
     }
 
-    // Require a subcategory selection
     if (!body.subCategory) {
       return res.status(400).json({
         success: false,
@@ -296,7 +301,6 @@ exports.createPage = async (req, res) => {
       });
     }
 
-    // Auto-derive the parent category from the chosen subcategory (item)
     const resolvedCategory = await resolveCategoryFromSubCategory(
       body.subCategory
     );
@@ -310,10 +314,13 @@ exports.createPage = async (req, res) => {
 
     body.category = resolvedCategory;
 
-    body.urlPath = `/${type === "service" ? "services" : type === "industry" ? "industries" : "platforms"}/${slugify(
-      body.title,
-      { lower: true, strict: true }
-    )}`;
+    // urlPath follows the slug (admin-chosen, else derived from the title)
+    const createSlug = slugify(body.slug?.trim() || body.title || "", {
+      lower: true,
+      strict: true,
+    });
+
+    body.urlPath = `/${URL_SEGMENT[type]}/${createSlug}`;
 
     const page = await Page.create(body);
 
@@ -347,7 +354,6 @@ exports.updatePage = async (req, res) => {
     }
 
     const body = { ...req.body };
-    // type is never changed via update — it's fixed by the route
     delete body.type;
 
     parseJsonFields(body, PAGE_JSON_FIELDS);
@@ -366,6 +372,11 @@ exports.updatePage = async (req, res) => {
       body.slug = slugify(body.slug, { lower: true, strict: true });
     } else if (body.title) {
       body.slug = slugify(body.title, { lower: true, strict: true });
+    }
+
+    /* keep urlPath in sync with the slug */
+    if (body.slug) {
+      body.urlPath = `/${URL_SEGMENT[type]}/${body.slug}`;
     }
 
     /* duplicate slug (scoped to the same type) */
@@ -529,11 +540,7 @@ exports.togglePublish = async (req, res) => {
 
 
 /* ==============================
- CATEGORY-WISE PAGES (for landing pages, e.g. /services,
- /industries, /platforms)
- Groups all published pages of a given type by their top-level
- Category -> Subcategory, so the frontend can render sections
- automatically without hardcoding data.
+ CATEGORY-WISE PAGES
  GET /api/pages/:type/by-category?category=slug
 ================================ */
 
@@ -619,10 +626,6 @@ exports.getPagesByCategory = async (req, res) => {
 
 /* ==============================
  MENU GROUP BY SUBCATEGORY
- Powers the mega-menu (e.g. the "What We Do" dropdown grouping
- services under "Strategy & Transformation", "Managed IT &
- Security", etc). Works the same way for industries/platforms if
- their nav ever needs the same grouped-dropdown treatment.
  GET /api/pages/:type/menu
 ================================ */
 

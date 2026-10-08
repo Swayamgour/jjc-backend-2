@@ -10,31 +10,23 @@ const seoSchema = require("../utils/seoSchema");
    - "industry"  (e.g. Healthcare)
    - "platform"  (e.g. Microsoft 365)
 
- WHY ONE MODEL:
- All three templates share ~80% of their sections (hero, a
- problem/overview block, an outcomes metrics grid, a "how we
- help" cards row, a 5-step approach, a "why us" grid, success
- stories, insights, a CTA band, related items and SEO). Only a
- handful of sections are type-specific. Rather than maintaining
- three near-identical models/controllers/routes, every section
- lives on one schema. Sections that don't apply to a given
- `type` are simply left empty — the frontend decides what to
- render based on `type` (and on whether a section actually has
- data, via the `hasX` virtuals/helpers below).
+ All sections live on one schema. Sections that don't apply to a
+ given `type` are simply left empty — the frontend renders a
+ section only when it actually has data.
 
  TYPE-SPECIFIC SECTIONS:
-   service  -> taskBoard              ("What's included")
-   platform -> capabilities           ("What the platform gives you / direction")
-             -> industryUseCases      ("What organizations actually use it for")
-   industry -> sectorOverview         ("The sector" sub-sector cards)
-             -> applicationLayer      ("The application layer ... depend on")
+   service  -> taskBoard, definition, whoFor, microsoftPlatforms
+   platform -> capabilities, industryUseCases
+   industry -> sectorOverview, applicationLayer
 
- SHARED "SECOND-LEVEL" SECTION:
-   platform + industry both show a tag/title/description
-   consulting block (Implementation/Customization/Support/
-   Integration). Modeled once as `consultingServices` and reused
-   by both. Industry additionally lists concrete Dynamics 365
-   apps in the same tag/title/description shape -> `appGrid`.
+ SHARED: consultingServices (platform + industry), appGrid (industry)
+ SHARED: faqs (any type)
+
+ RICH TEXT NOTE:
+   Any field documented as "rich" (definition.paragraphs,
+   faqs.items[].answer, whoFor.honestNote, ...) supports inline
+   links using markdown syntax:  [managed IT](/services/managed-it-services)
+   The frontend converts these into <a> tags (renderRichText util).
 ================================================================ */
 
 
@@ -47,55 +39,71 @@ const imageSchema = new mongoose.Schema(
 
 const statSchema = new mongoose.Schema(
   {
-    value: String, // e.g. "2-4 wks"
-    label: String, // e.g. "Typical assessment duration"
+    value: String,
+    label: String,
   },
   { _id: false }
 );
 
 const metricSchema = new mongoose.Schema(
   {
-    label: String, // e.g. "Spend recovered"
-    value: String, // e.g. "10-25%"
+    label: String,
+    value: String,
     description: String,
   },
   { _id: false }
 );
 
-// Generic "title + description" card, used by several sections
 const simpleItemSchema = new mongoose.Schema(
   {
     _id: false,
     title: String,
     description: String,
-    // Industry challenges show a secondary line under each item:
-    // "THE OUTCOME LEADERS ASK FOR". Optional everywhere else.
     outcomeAsk: String,
   },
   { _id: false }
 );
 
-// Generic "tag + title + description" row, used by taskBoard,
-// applicationLayer, consultingServices, appGrid
 const tagItemSchema = new mongoose.Schema(
   {
     _id: false,
-    tag: String, // e.g. "core" | "clinical" | "implementation"
+    tag: String,
     title: String,
     description: String,
   },
   { _id: false }
 );
 
-// Generic "icon + title + description (+ points[])" card, used by
-// pillars/howWeHelp, whyUs, capabilities
 const iconItemSchema = new mongoose.Schema(
   {
     _id: false,
     icon: String,
     title: String,
     description: String,
-    points: [String], // optional checklist under the card
+    points: [String],
+  },
+  { _id: false }
+);
+
+// "icon + title + description + tag" — used by definition.layers
+const layerItemSchema = new mongoose.Schema(
+  {
+    _id: false,
+    icon: String,
+    title: String,
+    description: String,
+    tag: String, // e.g. "This page" | "Consulting" | "Delivery"
+  },
+  { _id: false }
+);
+
+// FAQ entry. `answer` is rich text (supports [label](url) links)
+const faqItemSchema = new mongoose.Schema(
+  {
+    _id: false,
+    question: { type: String, required: true },
+    answer: { type: String, required: true },
+    open: { type: Boolean, default: false }, // expanded by default
   },
   { _id: false }
 );
@@ -126,19 +134,14 @@ const storySchema = new mongoose.Schema(
 const insightPostSchema = new mongoose.Schema(
   {
     _id: false,
-    tag: String, // "Resource" | "Blog" | "Checklist"
-    meta: String, // "Download" | "6 min read" | "10 items"
+    tag: String,
+    meta: String,
     title: String,
     description: String,
     link: String,
   },
   { _id: false }
 );
-
-// A section with an eyebrow/title/subtitle header + a closing
-// callout note is extremely common. Individual section schemas
-// below embed these fields directly (rather than nesting one
-// more level) so admin-panel forms stay flat and simple.
 
 
 /* ==============================================================
@@ -148,8 +151,6 @@ const insightPostSchema = new mongoose.Schema(
 const pageSchema = new mongoose.Schema(
   {
 
-    /* ---- discriminator-by-field (not a Mongoose discriminator
-       on purpose — keeps one flat collection, one API surface) ---- */
     type: {
       type: String,
       enum: ["service", "industry", "platform"],
@@ -179,15 +180,26 @@ const pageSchema = new mongoose.Schema(
         title: { type: String, default: "At a glance" },
         items: [String],
       },
-      stats: [statSchema], // the 4-box strip
+      stats: [statSchema],
+    },
+
+
+    /* ==============================
+     1b. DEFINITION / "THE BASICS"   (service)
+     "What is IT strategy consulting?" + layers strip + copy.
+     paragraphs[] are RICH TEXT (supports [label](url) links).
+    ================================ */
+    definition: {
+      eyebrow: String, // "The basics"
+      title: String, // "What is IT strategy consulting?"
+      layersLabel: String, // aria-label for the layers strip
+      layers: [layerItemSchema],
+      paragraphs: [String], // rich text
     },
 
 
     /* ==============================
      2. PROBLEM / OVERVIEW
-     service  -> "Why do it" / symptoms
-     platform -> "The platform is fine, the deployment isn't"
-     industry -> "What healthcare executives tell us is broken"
     ================================ */
     challenges: {
       eyebrow: String,
@@ -201,8 +213,6 @@ const pageSchema = new mongoose.Schema(
 
     /* ==============================
      2b. SECTOR OVERVIEW  (industry only)
-     "The sector" — sub-sector cards, e.g. Hospitals & health
-     systems, Ambulatory & physician groups, ...
     ================================ */
     sectorOverview: {
       eyebrow: String,
@@ -215,20 +225,17 @@ const pageSchema = new mongoose.Schema(
 
     /* ==============================
      2c. APPLICATION LAYER  (industry only)
-     "The application layer healthcare organizations depend on"
     ================================ */
     applicationLayer: {
       eyebrow: String,
       title: String,
       subtitle: String,
-      items: [tagItemSchema], // tag = Clinical/Operational/Financial/Governance
+      items: [tagItemSchema],
     },
 
 
     /* ==============================
      2d. CAPABILITIES & DIRECTION  (platform only)
-     "What the platform gives you, and where Microsoft is
-     taking it" + industry use-case cards
     ================================ */
     capabilities: {
       eyebrow: String,
@@ -242,7 +249,7 @@ const pageSchema = new mongoose.Schema(
       eyebrow: String,
       title: String,
       subtitle: String,
-      items: [simpleItemSchema], // title = "Healthcare", description = use case
+      items: [simpleItemSchema],
     },
 
 
@@ -256,8 +263,6 @@ const pageSchema = new mongoose.Schema(
       metrics: [metricSchema],
       note: String,
 
-      // platform's extra "business outcomes Microsoft associates
-      // with this platform" block sits under the same section
       associatedTitle: String,
       associatedSubtitle: String,
       associatedItems: [simpleItemSchema],
@@ -266,7 +271,7 @@ const pageSchema = new mongoose.Schema(
 
 
     /* ==============================
-     4. HOW WE HELP  ("pillars" / "three ways we work with...")
+     4. HOW WE HELP
     ================================ */
     pillars: {
       eyebrow: String,
@@ -277,7 +282,7 @@ const pageSchema = new mongoose.Schema(
 
 
     /* ==============================
-     5a. TASK BOARD  (service only — "What's included")
+     5a. TASK BOARD  (service only)
     ================================ */
     taskBoard: {
       eyebrow: String,
@@ -299,37 +304,62 @@ const pageSchema = new mongoose.Schema(
 
 
     /* ==============================
-     5b. CONSULTING SERVICES
-     (platform + industry — Implementation / Customization /
-     Support / Integration of the platform/product)
+     5b. CONSULTING SERVICES  (platform + industry)
     ================================ */
     consultingServices: {
       eyebrow: String,
       title: String,
       subtitle: String,
-      items: [tagItemSchema], // tag = implementation/customization/support/integration
+      items: [tagItemSchema],
       note: String,
     },
 
-    // industry-only: concrete app grid, e.g. "The Dynamics 365
-    // applications that earn their place in healthcare"
     appGrid: {
       eyebrow: String,
       title: String,
       subtitle: String,
-      items: [tagItemSchema], // tag = Customer Service/Field Service/Finance/...
-      note: String, // e.g. the Copilot/AI caution callout
+      items: [tagItemSchema],
+      note: String,
     },
 
 
     /* ==============================
-     6. APPROACH (5 steps)
+     6. APPROACH
     ================================ */
     approach: {
       eyebrow: String,
       title: String,
       subtitle: String,
       steps: [stepSchema],
+      note: String,
+    },
+
+
+    /* ==============================
+     6b. WHO IT'S FOR   (service)
+     items[] = checklist lines. honestNote = the "you probably
+     don't need us yet" callout beside the heading.
+    ================================ */
+    whoFor: {
+      eyebrow: String, // "Who it's for"
+      title: String,
+      subtitle: String,
+      honestNote: String,
+      items: [String],
+    },
+
+
+    /* ==============================
+     6c. MICROSOFT PLATFORMS   (service)
+     "Where Microsoft technology fits into the plan"
+     note = closing line ("Where a non-Microsoft tool is the
+     better answer, the plan says so.")
+    ================================ */
+    microsoftPlatforms: {
+      eyebrow: String,
+      title: String,
+      subtitle: String,
+      items: [iconItemSchema], // icon, title, description
       note: String,
     },
 
@@ -384,10 +414,6 @@ const pageSchema = new mongoose.Schema(
 
     /* ==============================
      11. RELATED ITEMS
-     Generic now: can point at any other Page (service, industry
-     or platform), e.g. "Related platforms" on a platform page,
-     "Related industries" on an industry page, "Related services"
-     on a service page.
     ================================ */
     relatedItems: {
       eyebrow: { type: String, default: "Often combined with" },
@@ -397,23 +423,30 @@ const pageSchema = new mongoose.Schema(
           _id: false,
           page: { type: mongoose.Schema.Types.ObjectId, ref: "Page" },
           icon: String,
-          title: String, // optional override; falls back to page.title
-          description: String, // optional override
-          link: String, // optional override; falls back to page.urlPath
+          title: String,
+          description: String,
+          link: String,
         },
       ],
     },
 
 
     /* ==============================
+     12. FAQs   (any type)
+     answer is RICH TEXT (supports [label](url) links).
+    ================================ */
+    faqs: {
+      eyebrow: { type: String, default: "FAQs" },
+      title: { type: String, default: "Frequently asked questions" },
+      helpText: { type: String, default: "Can't find your question?" },
+      helpLinkText: { type: String, default: "Ask us directly" },
+      helpLinkHref: { type: String, default: "/contact" },
+      items: [faqItemSchema],
+    },
+
+
+    /* ==============================
      TAXONOMY
-     Same pattern as the original Service model: `subCategory`
-     stores the 3rd-level ITEM _id from Category.subcategories[].
-     items[], and `category` is auto-derived from it. This works
-     identically for all three types as long as your Category
-     collection has a top-level doc for each area (e.g. a
-     "Services" doc, an "Industries" doc, a "Platforms" doc), each
-     with its own subcategories/items.
     ================================ */
     category: {
       type: mongoose.Schema.Types.ObjectId,
